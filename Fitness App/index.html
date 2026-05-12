@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Workout Plans</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #F7F7F5;
+  --surface: #FFFFFF;
+  --border: rgba(0,0,0,0.08);
+  --text: #111318;
+  --muted: rgba(17,19,24,0.45);
+  --a-primary: #FF6B35;
+  --a-accent: #E94560;
+  --b-primary: #0096C7;
+  --b-accent: #6A1FBE;
+}
+
+html, body {
+  min-height: 100vh;
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+}
+
+/* ── BACKGROUND GRAIN ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.025'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── HEADER ── */
+header {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  padding: 64px 24px 48px;
+}
+
+.logo-line {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.logo-icon {
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, var(--a-primary), var(--a-accent));
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+}
+
+h1 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(2.8rem, 7vw, 5rem);
+  letter-spacing: 4px;
+  line-height: 1;
+  background: linear-gradient(135deg, #111318 40%, rgba(17,19,24,0.55));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.subtitle {
+  font-size: 0.95rem;
+  color: var(--muted);
+  font-weight: 300;
+  letter-spacing: 1px;
+  margin-top: 8px;
+}
+
+/* ── STATS STRIP ── */
+#stats-strip {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  gap: 48px;
+  margin-bottom: 52px;
+  padding: 0 24px;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.4rem;
+  line-height: 1;
+  color: var(--text);
+}
+
+.stat-label {
+  font-size: 0.7rem;
+  letter-spacing: 2px;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-top: 3px;
+}
+
+.stat-divider {
+  width: 1px;
+  background: var(--border);
+  align-self: stretch;
+}
+
+/* ── CARDS GRID ── */
+#cards {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 24px;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 24px 80px;
+}
+
+.plan-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  overflow: hidden;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  cursor: pointer;
+  position: relative;
+}
+
+.plan-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 24px 60px rgba(0,0,0,0.12);
+}
+
+.plan-card:hover .card-arrow {
+  transform: translateX(4px);
+  opacity: 1;
+}
+
+/* Glow effect per plan */
+.card-a { box-shadow: 0 2px 16px rgba(0,0,0,0.07); }
+.card-a:hover { box-shadow: 0 24px 60px rgba(255,107,53,0.18), 0 0 0 1px rgba(255,107,53,0.3); }
+.card-b { box-shadow: 0 2px 16px rgba(0,0,0,0.07); }
+.card-b:hover { box-shadow: 0 24px 60px rgba(0,150,199,0.18), 0 0 0 1px rgba(0,150,199,0.3); }
+
+/* ── CARD HEADER BAND ── */
+.card-band {
+  height: 5px;
+}
+.card-a .card-band { background: linear-gradient(90deg, var(--a-primary), var(--a-accent)); }
+.card-b .card-band { background: linear-gradient(90deg, var(--b-primary), var(--b-accent)); }
+
+/* ── CARD BODY ── */
+.card-body {
+  padding: 28px 28px 24px;
+}
+
+.card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.plan-badge {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 3rem;
+  line-height: 1;
+  letter-spacing: 2px;
+}
+.card-a .plan-badge { color: var(--a-primary); }
+.card-b .plan-badge { color: var(--b-primary); }
+
+.card-arrow {
+  font-size: 1.4rem;
+  color: var(--muted);
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  opacity: 0.5;
+  margin-top: 6px;
+}
+
+/* ── EXERCISE TAGS ── */
+.tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 22px;
+}
+
+.tag {
+  font-size: 0.7rem;
+  letter-spacing: 0.5px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+.tag-warmup  { background: rgba(255,107,53,0.12); color: #FF8A5E; border: 1px solid rgba(255,107,53,0.2); }
+.tag-exercise{ background: rgba(233,69,96,0.12);  color: #F06080; border: 1px solid rgba(233,69,96,0.2); }
+.tag-warmdown{ background: rgba(15,155,88,0.12);  color: #3ECDA0; border: 1px solid rgba(15,155,88,0.2); }
+
+.tag-warmup-b  { background: rgba(0,180,216,0.12); color: #33C5E3; border: 1px solid rgba(0,180,216,0.2); }
+.tag-exercise-b{ background: rgba(123,47,190,0.15); color: #A560E8; border: 1px solid rgba(123,47,190,0.25); }
+.tag-warmdown-b{ background: rgba(6,214,160,0.12); color: #06D6A0; border: 1px solid rgba(6,214,160,0.2); }
+
+/* ── EXERCISE LIST ── */
+.exercise-list {
+  list-style: none;
+  margin-bottom: 24px;
+}
+
+.exercise-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  font-size: 0.85rem;
+  color: rgba(240,240,240,0.75);
+}
+
+.exercise-list li:last-child { border-bottom: none; }
+
+.ex-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.card-a .ex-dot { background: var(--a-primary); }
+.card-b .ex-dot { background: var(--b-primary); }
+
+.ex-time {
+  margin-left: auto;
+  font-size: 0.7rem;
+  color: var(--muted);
+  letter-spacing: 0.5px;
+  font-weight: 300;
+  flex-shrink: 0;
+}
+
+.more-label {
+  font-size: 0.75rem;
+  color: var(--muted);
+  font-style: italic;
+  padding: 6px 0 0;
+  display: block;
+}
+
+/* ── DURATION BAR ── */
+.meta-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.meta-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: rgba(0,0,0,0.04);
+  border: 1px solid var(--border);
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.meta-pill span.icon { font-size: 0.9rem; }
+
+/* ── COMPLETION COUNTER ── */
+.counter-section {
+  border-top: 1px solid var(--border);
+  padding-top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.counter-left {}
+
+.counter-label {
+  font-size: 0.68rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.counter-number {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.2rem;
+  line-height: 1;
+}
+.card-a .counter-number { color: var(--a-primary); }
+.card-b .counter-number { color: var(--b-primary); }
+
+.counter-sub {
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-top: 2px;
+  font-weight: 300;
+}
+
+/* Streak dots */
+.streak-dots {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  max-width: 130px;
+}
+
+.streak-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.08);
+  border: 1px solid rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+}
+
+.streak-dot.filled-a { background: var(--a-primary); border-color: var(--a-primary); box-shadow: 0 0 6px rgba(255,107,53,0.4); }
+.streak-dot.filled-b { background: var(--b-primary); border-color: var(--b-primary); box-shadow: 0 0 6px rgba(0,180,216,0.4); }
+
+/* ── START BUTTON ── */
+.start-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  margin-top: 20px;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.15rem;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.card-a .start-btn {
+  background: linear-gradient(135deg, var(--a-primary), var(--a-accent));
+  color: white;
+}
+.card-a .start-btn:hover { filter: brightness(1.12); transform: scale(1.01); }
+
+.card-b .start-btn {
+  background: linear-gradient(135deg, var(--b-primary), var(--b-accent));
+  color: white;
+}
+.card-b .start-btn:hover { filter: brightness(1.12); transform: scale(1.01); }
+
+/* ── RESET BUTTON ── */
+.reset-btn {
+  display: block;
+  margin: 4px auto 0;
+  background: none;
+  border: none;
+  font-size: 0.7rem;
+  color: var(--muted);
+  cursor: pointer;
+  letter-spacing: 1px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  padding: 4px;
+  transition: color 0.2s;
+}
+.reset-btn:hover { color: var(--text); }
+
+/* ── FOOTER ── */
+footer {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  padding-bottom: 32px;
+  font-size: 0.72rem;
+  color: rgba(0,0,0,0.22);
+  letter-spacing: 1px;
+}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+header  { animation: fadeUp 0.6s ease both; }
+#stats-strip { animation: fadeUp 0.6s 0.1s ease both; }
+.plan-card:nth-child(1) { animation: fadeUp 0.6s 0.2s ease both; }
+.plan-card:nth-child(2) { animation: fadeUp 0.6s 0.32s ease both; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-line">
+    <div class="logo-icon">💪</div>
+  </div>
+  <h1>MY WORKOUTS</h1>
+  <p class="subtitle">30 seconds per exercise · Full body · No equipment</p>
+</header>
+
+<div id="stats-strip">
+  <div class="stat-item">
+    <div class="stat-num" id="total-sessions">0</div>
+    <div class="stat-label">Total Sessions</div>
+  </div>
+  <div class="stat-divider"></div>
+  <div class="stat-item">
+    <div class="stat-num">23</div>
+    <div class="stat-label">Exercises / Plan</div>
+  </div>
+  <div class="stat-divider"></div>
+  <div class="stat-item">
+    <div class="stat-num">11<span style="font-size:1.2rem;color:var(--muted)">min</span></div>
+    <div class="stat-label">Per Workout</div>
+  </div>
+</div>
+
+<div id="cards">
+
+  <!-- PLAN A -->
+  <div class="plan-card card-a" onclick="openPlan('a')">
+    <div class="card-band"></div>
+    <div class="card-body">
+      <div class="card-top">
+        <div class="plan-badge">PLAN A</div>
+        <div class="card-arrow">→</div>
+      </div>
+
+      <div class="tag-row">
+        <span class="tag tag-warmup">6 Warm Up</span>
+        <span class="tag tag-exercise">12 Exercises</span>
+        <span class="tag tag-warmdown">5 Warm Down</span>
+      </div>
+
+      <ul class="exercise-list" id="list-a"></ul>
+
+      <div class="meta-row">
+        <div class="meta-pill"><span class="icon">⏱</span> ~11.5 minutes</div>
+        <div class="meta-pill"><span class="icon">🔥</span> Full body</div>
+        <div class="meta-pill"><span class="icon">🧘</span> Plank focus</div>
+      </div>
+
+      <div class="counter-section">
+        <div class="counter-left">
+          <div class="counter-label">Times Completed</div>
+          <div class="counter-number" id="count-a">0</div>
+          <div class="counter-sub" id="sub-a">Start your first session!</div>
+        </div>
+        <div class="streak-dots" id="dots-a"></div>
+      </div>
+
+      <a class="start-btn" onclick="event.stopPropagation(); openPlan('a')">
+        ▶ &nbsp;START PLAN A
+      </a>
+      <button class="reset-btn" onclick="event.stopPropagation(); resetCount('a')">Reset count</button>
+    </div>
+  </div>
+
+  <!-- PLAN B -->
+  <div class="plan-card card-b" onclick="openPlan('b')">
+    <div class="card-band"></div>
+    <div class="card-body">
+      <div class="card-top">
+        <div class="plan-badge">PLAN B</div>
+        <div class="card-arrow">→</div>
+      </div>
+
+      <div class="tag-row">
+        <span class="tag tag-warmup-b">6 Warm Up</span>
+        <span class="tag tag-exercise-b">12 Exercises</span>
+        <span class="tag tag-warmdown-b">5 Warm Down</span>
+      </div>
+
+      <ul class="exercise-list" id="list-b"></ul>
+
+      <div class="meta-row">
+        <div class="meta-pill"><span class="icon">⏱</span> ~11.5 minutes</div>
+        <div class="meta-pill"><span class="icon">🔥</span> Full body</div>
+        <div class="meta-pill"><span class="icon">💪</span> Core focus</div>
+      </div>
+
+      <div class="counter-section">
+        <div class="counter-left">
+          <div class="counter-label">Times Completed</div>
+          <div class="counter-number" id="count-b">0</div>
+          <div class="counter-sub" id="sub-b">Start your first session!</div>
+        </div>
+        <div class="streak-dots" id="dots-b"></div>
+      </div>
+
+      <a class="start-btn" onclick="event.stopPropagation(); openPlan('b')">
+        ▶ &nbsp;START PLAN B
+      </a>
+      <button class="reset-btn" onclick="event.stopPropagation(); resetCount('b')">Reset count</button>
+    </div>
+  </div>
+
+</div>
+
+<footer>ALL EXERCISES · 30 SECONDS EACH · NO EQUIPMENT NEEDED</footer>
+
+<script>
+// ── EXERCISE LISTS ──────────────────────────────────────────────────────────
+const exercisesA = [
+  "Arm Circles", "Shoulder Stretch", "Side Stretch", "Hip Circles", "Cat-Cow", "Revolved Lunge Pose",
+  "Push-Ups", "Pike Push-Ups", "Side-to-Side Squats", "Crossover Lunges", "Mountain Climbers", "Leg Raises",
+  "Alt. Arm/Leg Plank", "Right Side Plank", "Left Side Plank", "Glute Bridge Leg Raise", "Reverse Snow Angels", "Superman Hold",
+  "Figure 4 Stretch", "Seated Twist", "Downward Dog", "Cobra", "Child's Pose"
+];
+
+const exercisesB = [
+  "Arm Circles", "Shoulder Stretch", "Hip Circles", "Side Stretch", "Cat-Cow", "Revolved Lunge Pose",
+  "Push-Ups", "Close-Grip Push-Ups", "Side-to-Side Squats", "Crossover Lunges", "Toe Touches", "Flutter Kicks",
+  "Elbow-to-Hand Plank", "Front Plank", "Right Side Plank", "Left Side Plank", "Glute Bridge Leg Raise", "Reverse Snow Angels",
+  "Figure 4 Stretch", "Seated Twist", "Downward Dog", "Cobra", "Child's Pose"
+];
+
+// Show first 6 exercises as preview
+function buildList(id, exercises) {
+  const ul = document.getElementById(id);
+  const preview = exercises.slice(0, 6);
+  preview.forEach(ex => {
+    const li = document.createElement('li');
+    li.innerHTML = `<span class="ex-dot"></span>${ex}<span class="ex-time">30s</span>`;
+    ul.appendChild(li);
+  });
+  const more = document.createElement('span');
+  more.className = 'more-label';
+  more.textContent = `+ ${exercises.length - 6} more exercises…`;
+  ul.appendChild(more);
+}
+
+buildList('list-a', exercisesA);
+buildList('list-b', exercisesB);
+
+// ── COMPLETION COUNTS ───────────────────────────────────────────────────────
+function getCount(plan) {
+  return parseInt(localStorage.getItem(`plan${plan.toUpperCase()}_completions`) || '0');
+}
+
+function renderCount(plan) {
+  const count = getCount(plan);
+  const numEl = document.getElementById(`count-${plan}`);
+  const subEl = document.getElementById(`sub-${plan}`);
+  const dotsEl = document.getElementById(`dots-${plan}`);
+  const filledClass = `filled-${plan}`;
+
+  numEl.textContent = count;
+
+  if (count === 0) {
+    subEl.textContent = 'Start your first session!';
+  } else if (count === 1) {
+    subEl.textContent = 'Great start — keep it up!';
+  } else if (count < 5) {
+    subEl.textContent = `${count} sessions done 🔥`;
+  } else if (count < 10) {
+    subEl.textContent = `Building a habit! 💪`;
+  } else {
+    subEl.textContent = `Consistency champion! 🏆`;
+  }
+
+  // Streak dots — show last 10 sessions as filled dots
+  dotsEl.innerHTML = '';
+  const dots = Math.min(count, 10);
+  const total = Math.max(dots, 10);
+  for (let i = 0; i < total; i++) {
+    const d = document.createElement('div');
+    d.className = `streak-dot${i < dots ? ' ' + filledClass : ''}`;
+    dotsEl.appendChild(d);
+  }
+
+  // Update total sessions strip
+  const totalSessions = getCount('a') + getCount('b');
+  document.getElementById('total-sessions').textContent = totalSessions;
+}
+
+function resetCount(plan) {
+  if (confirm(`Reset Plan ${plan.toUpperCase()} completion count to 0?`)) {
+    localStorage.setItem(`plan${plan.toUpperCase()}_completions`, '0');
+    renderCount(plan);
+  }
+}
+
+function openPlan(plan) {
+  window.location.href = `workout_plan_${plan}.html`;
+}
+
+// ── INIT ────────────────────────────────────────────────────────────────────
+renderCount('a');
+renderCount('b');
+
+// Poll for updates when returning from a workout (handles back navigation)
+window.addEventListener('pageshow', () => {
+  renderCount('a');
+  renderCount('b');
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Workout Plan A</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --warm: #FF6B35;
+    --cool: #1A1A2E;
+    --mid: #16213E;
+    --accent: #E94560;
+    --green: #0F9B58;
+    --text: #F0F0F0;
+    --muted: rgba(240,240,240,0.5);
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cool);
+    color: var(--text);
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* TOP BAR */
+  #topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 24px;
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    flex-shrink: 0;
+    z-index: 10;
+  }
+  #plan-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.4rem;
+    letter-spacing: 3px;
+    color: var(--warm);
+  }
+  #phase-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 2px;
+    padding: 4px 14px;
+    border-radius: 20px;
+    background: rgba(255,107,53,0.15);
+    border: 1px solid rgba(255,107,53,0.4);
+  }
+  #slide-counter {
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-weight: 300;
+  }
+
+  /* PROGRESS BAR */
+  #progress-track {
+    height: 3px;
+    background: rgba(255,255,255,0.1);
+    flex-shrink: 0;
+  }
+  #progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--warm), var(--accent));
+    transition: width 0.3s ease;
+  }
+
+  /* MAIN CONTENT */
+  #stage {
+    flex: 1;
+    display: flex;
+    align-items: stretch;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* IMAGE PANEL */
+  #image-panel {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--mid);
+  }
+  #exercise-gif {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    transition: opacity 0.4s ease;
+  }
+  #gif-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to right, transparent 70%, var(--cool));
+    pointer-events: none;
+  }
+  #phase-badge {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.9rem;
+    letter-spacing: 2px;
+    padding: 4px 12px;
+    border-radius: 4px;
+    background: var(--accent);
+    color: white;
+  }
+
+  /* INFO PANEL */
+  #info-panel {
+    width: 340px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 28px;
+    gap: 20px;
+    background: var(--cool);
+  }
+
+  #exercise-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.4rem;
+    line-height: 1.1;
+    letter-spacing: 2px;
+    text-align: center;
+    color: var(--text);
+  }
+
+  #exercise-tip {
+    font-size: 0.82rem;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.6;
+    max-width: 260px;
+  }
+
+  /* TIMER CIRCLE */
+  #timer-wrap {
+    position: relative;
+    width: 140px;
+    height: 140px;
+    flex-shrink: 0;
+  }
+  #timer-svg {
+    transform: rotate(-90deg);
+  }
+  #timer-bg-circle {
+    fill: none;
+    stroke: rgba(255,255,255,0.07);
+    stroke-width: 8;
+  }
+  #timer-progress-circle {
+    fill: none;
+    stroke: var(--warm);
+    stroke-width: 8;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 1s linear, stroke 0.5s ease;
+  }
+  #timer-text {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+  }
+  #timer-seconds {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 3rem;
+    line-height: 1;
+    color: var(--text);
+  }
+  #timer-label {
+    font-size: 0.65rem;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  /* NEXT EXERCISE */
+  #next-wrap {
+    text-align: center;
+    width: 100%;
+  }
+  #next-label {
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  #next-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+    color: var(--warm);
+  }
+
+  /* CONTROLS */
+  #controls {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+  }
+  .ctrl-btn {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  #btn-prev { background: rgba(255,255,255,0.07); color: var(--muted); }
+  #btn-prev:hover { background: rgba(255,255,255,0.13); color: var(--text); }
+  #btn-pause {
+    background: var(--warm);
+    color: white;
+    flex: 2;
+  }
+  #btn-pause:hover { background: #ff7d4a; }
+  #btn-next { background: rgba(255,255,255,0.07); color: var(--muted); }
+  #btn-next:hover { background: rgba(255,255,255,0.13); color: var(--text); }
+
+  /* BOTTOM DOTS */
+  #dots-wrap {
+    padding: 10px 24px;
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: rgba(0,0,0,0.3);
+    overflow-x: auto;
+  }
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+  }
+  .dot.active {
+    background: var(--warm);
+    width: 18px;
+    border-radius: 3px;
+  }
+  .dot.done { background: rgba(255,107,53,0.35); }
+
+  /* OVERLAY for complete */
+  #complete-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(10,10,20,0.95);
+    z-index: 100;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+  }
+  #complete-overlay.show { display: flex; }
+  #complete-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 4rem;
+    color: var(--warm);
+    letter-spacing: 4px;
+  }
+  #complete-sub {
+    color: var(--muted);
+    font-size: 1rem;
+  }
+  #btn-restart {
+    margin-top: 12px;
+    padding: 14px 36px;
+    background: var(--warm);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.2rem;
+    letter-spacing: 2px;
+    cursor: pointer;
+  }
+  #btn-restart:hover { background: #ff7d4a; }
+
+  @keyframes fadeInUp {
+    from { opacity:0; transform:translateX(-50%) translateY(10px); }
+    to   { opacity:1; transform:translateX(-50%) translateY(0); }
+  }
+  @keyframes flash {
+    0%,100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+  .flashing { animation: flash 0.3s ease 3; }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <span id="plan-label">PLAN A</span>
+  <span id="phase-label">WARM UP</span>
+  <span id="slide-counter">1 / 23</span>
+</div>
+<div id="progress-track"><div id="progress-fill" style="width:0%"></div></div>
+
+<div id="stage">
+  <div id="image-panel">
+    <img id="exercise-gif" src="" alt="Exercise" />
+    <div id="gif-overlay"></div>
+    <span id="phase-badge">WARM UP</span>
+  </div>
+  <div id="info-panel">
+    <div id="exercise-name">ARM CIRCLES</div>
+    <div id="exercise-tip">Stand tall, extend arms out to sides and make slow controlled circles.</div>
+    <div id="timer-wrap">
+      <svg id="timer-svg" width="140" height="140" viewBox="0 0 140 140">
+        <circle id="timer-bg-circle" cx="70" cy="70" r="58"/>
+        <circle id="timer-progress-circle" cx="70" cy="70" r="58"
+          stroke-dasharray="364.4"
+          stroke-dashoffset="0"/>
+      </svg>
+      <div id="timer-text">
+        <span id="timer-seconds">30</span>
+        <span id="timer-label">seconds</span>
+      </div>
+    </div>
+    <div id="next-wrap">
+      <div id="next-label">Up Next</div>
+      <div id="next-name">Shoulder Stretch</div>
+    </div>
+    <div id="controls">
+      <button class="ctrl-btn" id="btn-prev">◀ Prev</button>
+      <button class="ctrl-btn" id="btn-pause">⏸ Pause</button>
+      <button class="ctrl-btn" id="btn-next">Next ▶</button>
+    </div>
+  </div>
+</div>
+
+<div id="dots-wrap"></div>
+
+<div id="complete-overlay">
+  <div id="complete-title">WORKOUT COMPLETE!</div>
+  <div id="complete-sub">Great job finishing Plan A 💪</div>
+  <button id="btn-restart" onclick="restart()">Restart</button>
+</div>
+
+<script>
+// ─── DATA ───────────────────────────────────────────────────────────────────
+const slides = [
+  // WARM UP
+  { phase: "WARM UP",   name: "Arm Circles",          tip: "Extend arms to sides and make slow controlled circles — switch direction halfway.",        gif: "https://media.giphy.com/media/1qXJTMQgbL3AqSEqJZ/giphy.gif" },
+  { phase: "WARM UP",   name: "Shoulder Stretch",      tip: "Pull one arm across your chest and hold, then switch. Keep shoulders relaxed.",            gif: "https://media.giphy.com/media/l0HlBO7eyXzSZkJri/giphy.gif" },
+  { phase: "WARM UP",   name: "Side Stretch",          tip: "Stand tall, raise one arm overhead and lean to the opposite side. Alternate sides.",       gif: "https://media.giphy.com/media/3o7TKP9ln2Dr6ze6f6/giphy.gif" },
+  { phase: "WARM UP",   name: "Hip Circles",           tip: "Hands on hips, rotate in large slow circles. Switch direction halfway.",                   gif: "https://media.giphy.com/media/3o7TKuylsMorCq1nnm/giphy.gif" },
+  { phase: "WARM UP",   name: "Cat-Cow",               tip: "On hands and knees: arch back up (cat), then drop belly down and lift head (cow).",        gif: "https://media.giphy.com/media/yIxNOXEMpqkqA/giphy.gif" },
+  { phase: "WARM UP",   name: "Revolved Lunge Pose",   tip: "Step into a lunge, rotate torso toward front leg. Open chest. Switch sides.",             gif: "https://media.giphy.com/media/3o7TKAGWHMWXqC5s0o/giphy.gif" },
+  // EXERCISES
+  { phase: "EXERCISE",  name: "Push-Ups",              tip: "Keep body in a straight line from head to heels. Lower chest to floor, push back up.",    gif: "https://media.giphy.com/media/9DosEVZgkGS7C/giphy.gif" },
+  { phase: "EXERCISE",  name: "Pike Push-Ups",         tip: "Form an inverted V. Bend elbows to lower head toward floor, then press back up.",         gif: "https://media.giphy.com/media/3o7TKul7JaTKdXFzGU/giphy.gif" },
+  { phase: "EXERCISE",  name: "Side-to-Side Squats",   tip: "Squat down, step to one side and squat again. Alternate left and right.",                 gif: "https://media.giphy.com/media/26gs9YjFPB0IqDjIs/giphy.gif" },
+  { phase: "EXERCISE",  name: "Crossover Lunges",      tip: "Step one foot diagonally behind, cross body into a deep lunge. Alternate legs.",          gif: "https://media.giphy.com/media/3o7btNhMBytxAM6YBa/giphy.gif" },
+  { phase: "EXERCISE",  name: "Mountain Climbers",     tip: "In plank position, drive knees alternately toward chest at a fast pace.",                  gif: "https://media.giphy.com/media/ByIMKOGTgCQYE/giphy.gif" },
+  { phase: "EXERCISE",  name: "Leg Raises",            tip: "Lie flat on back, keep legs straight, raise them to 90° then slowly lower.",              gif: "https://media.giphy.com/media/3o7btNaiv9sKAXN5Nu/giphy.gif" },
+  { phase: "EXERCISE",  name: "Alt. Arm/Leg Plank",    tip: "From plank, extend opposite arm and leg simultaneously. Slow and controlled.",            gif: "https://media.giphy.com/media/l0HlAgJTjgV8Gy9l6/giphy.gif" },
+  { phase: "EXERCISE",  name: "Right Side Plank",      tip: "Stack feet, raise hips off floor on right forearm. Keep body straight.",                  gif: "https://media.giphy.com/media/3o7TKt3MUFVBuFmfMc/giphy.gif" },
+  { phase: "EXERCISE",  name: "Left Side Plank",       tip: "Stack feet, raise hips off floor on left forearm. Keep body straight.",                   gif: "https://media.giphy.com/media/3o7TKt3MUFVBuFmfMc/giphy.gif" },
+  { phase: "EXERCISE",  name: "Glute Bridge Leg Raise",tip: "Lie on back, bridge up, then extend one leg. Lower and repeat on other side.",            gif: "https://media.giphy.com/media/3o7TKSjm2fGY8BGXRW/giphy.gif" },
+  { phase: "EXERCISE",  name: "Reverse Snow Angels",   tip: "Lie face down, arms at sides. Sweep arms overhead like a snow angel. Keep hips down.",    gif: "https://media.giphy.com/media/l0HlBO7eyXzSZkJri/giphy.gif" },
+  { phase: "EXERCISE",  name: "Superman Hold",         tip: "Lie face down, simultaneously lift arms, chest, and legs off floor. Hold and pulse.",     gif: "https://media.giphy.com/media/3o7TKMt1VVNkHV2PaE/giphy.gif" },
+  // WARM DOWN
+  { phase: "WARM DOWN", name: "Figure 4 Stretch",      tip: "Lie on back, cross ankle over opposite knee, pull thigh toward chest. Switch sides.",     gif: "https://media.giphy.com/media/l0HlBO7eyXzSZkJri/giphy.gif" },
+  { phase: "WARM DOWN", name: "Seated Twist",          tip: "Sit cross-legged, place hand on opposite knee, rotate torso and look behind.",            gif: "https://media.giphy.com/media/3o7TKAGWHMWXqC5s0o/giphy.gif" },
+  { phase: "WARM DOWN", name: "Downward Dog",          tip: "Form an inverted V with hips high. Press heels toward floor. Hold and breathe deeply.",   gif: "https://media.giphy.com/media/yIxNOXEMpqkqA/giphy.gif" },
+  { phase: "WARM DOWN", name: "Cobra",                 tip: "Lie face down, press up through hands, open chest. Keep hips on floor.",                  gif: "https://media.giphy.com/media/3o7TKt3MUFVBuFmfMc/giphy.gif" },
+  { phase: "WARM DOWN", name: "Child's Pose",          tip: "Kneel, sit back on heels, stretch arms forward, rest forehead on floor. Breathe deep.",   gif: "https://media.giphy.com/media/l4pTfx2qLszoacZRS/giphy.gif" },
+];
+
+// Phase colors
+const phaseColors = { "WARM UP": "#FF6B35", "EXERCISE": "#E94560", "WARM DOWN": "#0F9B58" };
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let current = 0;
+let timeLeft = 30;
+let paused = false;
+let timer = null;
+const CIRCUMFERENCE = 2 * Math.PI * 58; // ≈364.4
+
+// ─── AUDIO (Web Audio API beeps) ─────────────────────────────────────────────
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx;
+
+function ensureAudio() {
+  if (!audioCtx) audioCtx = new AudioCtx();
+}
+
+function beep(freq, dur, vol = 0.4) {
+  ensureAudio();
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.frequency.value = freq;
+  osc.type = 'sine';
+  gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+  osc.start(audioCtx.currentTime);
+  osc.stop(audioCtx.currentTime + dur);
+}
+
+function playAdvanceCue() {
+  // Three ascending beeps
+  beep(440, 0.12);
+  setTimeout(() => beep(550, 0.12), 130);
+  setTimeout(() => beep(660, 0.25), 260);
+}
+
+function playFinalCue() {
+  beep(660, 0.15);
+  setTimeout(() => beep(660, 0.15), 170);
+  setTimeout(() => beep(880, 0.4), 340);
+}
+
+function playCountdownBeep() {
+  beep(330, 0.08, 0.2);
+}
+
+// ─── RENDER ──────────────────────────────────────────────────────────────────
+function buildDots() {
+  const wrap = document.getElementById('dots-wrap');
+  wrap.innerHTML = '';
+  slides.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot';
+    d.title = slides[i].name;
+    d.onclick = () => { goTo(i); };
+    wrap.appendChild(d);
+  });
+}
+
+function updateDots() {
+  document.querySelectorAll('.dot').forEach((d, i) => {
+    d.className = 'dot';
+    if (i < current) d.classList.add('done');
+    if (i === current) d.classList.add('active');
+  });
+}
+
+function updateSlide() {
+  const s = slides[current];
+  const total = slides.length;
+  const pct = ((current) / total) * 100;
+
+  document.getElementById('exercise-name').textContent = s.name.toUpperCase();
+  document.getElementById('exercise-tip').textContent = s.tip;
+  document.getElementById('exercise-gif').src = s.gif;
+  document.getElementById('exercise-gif').style.opacity = '0';
+  setTimeout(() => { document.getElementById('exercise-gif').style.opacity = '1'; }, 50);
+
+  const color = phaseColors[s.phase];
+  document.getElementById('phase-label').textContent = s.phase;
+  document.getElementById('phase-label').style.background = `${color}25`;
+  document.getElementById('phase-label').style.borderColor = `${color}60`;
+  document.getElementById('phase-badge').textContent = s.phase;
+  document.getElementById('phase-badge').style.background = color;
+  document.getElementById('timer-progress-circle').style.stroke = color;
+
+  document.getElementById('slide-counter').textContent = `${current + 1} / ${total}`;
+  document.getElementById('progress-fill').style.width = `${pct}%`;
+
+  // Next
+  if (current < total - 1) {
+    document.getElementById('next-name').textContent = slides[current + 1].name;
+    document.getElementById('next-wrap').style.opacity = '1';
+  } else {
+    document.getElementById('next-name').textContent = '🎉 Done!';
+  }
+
+  updateDots();
+}
+
+function updateTimer() {
+  const frac = timeLeft / 30;
+  const offset = CIRCUMFERENCE * (1 - frac);
+  document.getElementById('timer-progress-circle').style.strokeDashoffset = offset;
+  document.getElementById('timer-seconds').textContent = timeLeft;
+
+  // Color urgency
+  const c = document.getElementById('timer-progress-circle');
+  if (timeLeft <= 5) c.style.stroke = '#E94560';
+  else c.style.stroke = phaseColors[slides[current].phase];
+}
+
+// ─── TIMER LOGIC ─────────────────────────────────────────────────────────────
+function startTimer() {
+  clearInterval(timer);
+  timer = setInterval(() => {
+    if (paused) return;
+    if (timeLeft <= 3 && timeLeft > 0) playCountdownBeep();
+    timeLeft--;
+    updateTimer();
+    if (timeLeft <= 0) {
+      clearInterval(timer);
+      if (current < slides.length - 1) {
+        playAdvanceCue();
+        setTimeout(() => goTo(current + 1), 300);
+      } else {
+        playFinalCue();
+        setTimeout(() => showComplete(), 500);
+      }
+    }
+  }, 1000);
+}
+
+function goTo(idx) {
+  ensureAudio();
+  clearInterval(timer);
+  current = idx;
+  timeLeft = 30;
+  updateSlide();
+  updateTimer();
+  paused = false;
+  document.getElementById('btn-pause').textContent = '⏸ Pause';
+  startTimer();
+}
+
+function showComplete() {
+  clearInterval(timer);
+  // Increment Plan A completion count in localStorage
+  const key = 'planA_completions';
+  const count = parseInt(localStorage.getItem(key) || '0') + 1;
+  localStorage.setItem(key, count);
+  document.getElementById('complete-overlay').classList.add('show');
+}
+
+function restart() {
+  document.getElementById('complete-overlay').classList.remove('show');
+  goTo(0);
+}
+
+// ─── CONTROLS ────────────────────────────────────────────────────────────────
+document.getElementById('btn-prev').onclick = () => {
+  if (current > 0) goTo(current - 1);
+};
+document.getElementById('btn-next').onclick = () => {
+  if (current < slides.length - 1) goTo(current + 1);
+  else showComplete();
+};
+document.getElementById('btn-pause').onclick = () => {
+  ensureAudio();
+  paused = !paused;
+  document.getElementById('btn-pause').textContent = paused ? '▶ Resume' : '⏸ Pause';
+};
+
+// Keyboard
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+    if (current < slides.length - 1) goTo(current + 1);
+  } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+    if (current > 0) goTo(current - 1);
+  } else if (e.key === ' ') {
+    e.preventDefault();
+    document.getElementById('btn-pause').click();
+  }
+});
+
+// ─── UNLOCK AUDIO ON FIRST INTERACTION ───────────────────────────────────────
+// Browsers block AudioContext until a user gesture. We create & resume it on
+// the very first click/keydown anywhere on the page, which satisfies the policy.
+function unlockAudio() {
+  if (!audioCtx) {
+    audioCtx = new AudioCtx();
+  }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+  // Remove listeners after first unlock
+  document.removeEventListener('click', unlockAudio);
+  document.removeEventListener('keydown', unlockAudio);
+  document.removeEventListener('touchstart', unlockAudio);
+}
+document.addEventListener('click', unlockAudio);
+document.addEventListener('keydown', unlockAudio);
+document.addEventListener('touchstart', unlockAudio);
+
+// Show a subtle "tap to enable audio" hint that disappears on first interaction
+const audioHint = document.createElement('div');
+audioHint.id = 'audio-hint';
+audioHint.textContent = '🔊 Tap anywhere to enable audio';
+audioHint.style.cssText = `
+  position:fixed; bottom:60px; left:50%; transform:translateX(-50%);
+  background:rgba(255,107,53,0.9); color:white; padding:8px 18px;
+  border-radius:20px; font-size:0.78rem; letter-spacing:1px; z-index:50;
+  animation: fadeInUp 0.5s ease forwards;
+  pointer-events:none;
+`;
+document.body.appendChild(audioHint);
+document.addEventListener('click', () => audioHint.remove(), { once: true });
+document.addEventListener('keydown', () => audioHint.remove(), { once: true });
+document.addEventListener('touchstart', () => audioHint.remove(), { once: true });
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+buildDots();
+updateSlide();
+updateTimer();
+startTimer();
+</script>
+</body>
+</html>
